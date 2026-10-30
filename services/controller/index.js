@@ -1,6 +1,7 @@
 const express = require('express');
 const shipping = require('./shipping');
 const inventory = require('./inventory');
+const grpc = require('@grpc/grpc-js');
 const cors = require('cors');
 
 const app = express();
@@ -41,6 +42,29 @@ app.get('/shipping/:cep', (req, res, next) => {
             }
         }
     );
+});
+
+/**
+ * Retorna um produto pelo seu ID via InventoryService
+ */
+app.get('/product/:id', (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 0 || id > 2147483647) {
+        res.status(400).send({ error: 'Invalid product ID' });
+        return;
+    }
+
+    inventory.SearchProductByID({ id }, (err, product) => {
+        if (err) {
+            console.error(err);
+            const isNotFound = err.code === grpc.status.NOT_FOUND;
+            res.status(isNotFound ? 404 : 500).send({
+                error: isNotFound ? 'Product not found' : 'something failed :(',
+            });
+        } else {
+            res.json(product);
+        }
+    });
 });
 
 /**

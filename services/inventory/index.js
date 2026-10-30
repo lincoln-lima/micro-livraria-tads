@@ -20,6 +20,19 @@ server.addService(inventoryProto.InventoryService.service, {
             products: products,
         });
     },
+    SearchProductByID: (call, callback) => {
+        const product = products.find((item) => item.id === call.request.id);
+
+        if (!product) {
+            callback({
+                code: grpc.status.NOT_FOUND,
+                details: 'Product not found',
+            });
+            return;
+        }
+
+        callback(null, product);
+    },
 });
 
 server.bindAsync('127.0.0.1:3002', grpc.ServerCredentials.createInsecure(), () => {
