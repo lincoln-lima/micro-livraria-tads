@@ -1,6 +1,7 @@
 const express = require('express');
 const shipping = require('./shipping');
 const inventory = require('./inventory');
+const reviews = require('./review');
 const grpc = require('@grpc/grpc-js');
 const cors = require('cors');
 
@@ -63,6 +64,41 @@ app.get('/product/:id', (req, res) => {
             });
         } else {
             res.json(product);
+        }
+    });
+});
+
+/**
+ * Retorna as avaliações de um produto via ReviewService
+ */
+app.get('/reviews/:id', (req, res) => {
+    reviews.GetReviews({ id: Number(req.params.id) }, (err, data) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send({ error: 'Falha ao recuperar avaliações' });
+        } else {
+            res.json(data);
+        }
+    });
+});
+
+/**
+ * Adiciona uma avaliação via ReviewService
+ */
+app.post('/reviews', (req, res) => {
+    const review = {
+        productId: req.body.productId,
+        username: req.body.username,
+        rating: req.body.rating,
+        comment: req.body.comment,
+    };
+
+    reviews.AddReview(review, (err, response) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send({ error: 'Falha ao adicionar avaliação' });
+        } else {
+            res.json(response);
         }
     });
 });
